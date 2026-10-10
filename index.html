@@ -1,1 +1,451 @@
-aaa
+<title>주식매매계산기 Stock Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800;900&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: 좌측 카피 + 우측 실제로 동작하는 폰 데모 히어로 → 4개 카테고리 9개 계산기 → 기능 3가지 → 출시 안내 */
+:root{
+  --bg:#F5F8FF;
+  --surface:#FFFFFF;
+  --surface-2:#EAF0FF;
+  --fg:#111A33;
+  --muted:#5A6684;
+  --line:#D9E1F5;
+  --accent:#2F6BFF;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#E3EBFF;
+  --good:#12A150;
+  --good-bg:#E8F7EE;
+  --bad:#E5484D;
+  --bad-bg:#FDECEC;
+  --amber:#F59E0B;
+  --violet:#7C5CFF;
+  --phone:#0E1630;
+  --shadow:0 24px 60px -24px rgba(47,107,255,.35);
+  --f-display:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1020;--surface:#131A2E;--surface-2:#1A2340;--fg:#E8EDFB;--muted:#9AA6C4;--line:#26314F;
+  --accent:#5B8BFF;--accent-ink:#FFFFFF;--accent-soft:#1C2A52;--good:#3DD17F;--good-bg:#10291C;
+  --bad:#FF6B6F;--bad-bg:#2E1517;--amber:#FBBF24;--violet:#9E85FF;--phone:#050912;
+  --shadow:0 24px 60px -24px rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1020;--surface:#131A2E;--surface-2:#1A2340;--fg:#E8EDFB;--muted:#9AA6C4;--line:#26314F;
+  --accent:#5B8BFF;--accent-ink:#FFFFFF;--accent-soft:#1C2A52;--good:#3DD17F;--good-bg:#10291C;
+  --bad:#FF6B6F;--bad-bg:#2E1517;--amber:#FBBF24;--violet:#9E85FF;--phone:#050912;
+  --shadow:0 24px 60px -24px rgba(0,0,0,.6);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.65;padding-inline:20px;word-break:keep-all}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.25}
+p{margin:0}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* nav */
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:22px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:18px}
+.brand svg{width:36px;height:36px;flex:none}
+.brand small{display:block;font-family:var(--f-body);font-weight:500;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.nav-cta{font-weight:600;font-size:14px;text-decoration:none;padding:9px 16px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding-block:32px 72px}
+.hero > *{min-width:0}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:6px 12px;border-radius:999px;letter-spacing:.02em}
+.hero h1{font-size:clamp(36px,5.6vw,60px);font-weight:900;letter-spacing:-.02em;margin-top:18px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lede{font-size:18px;color:var(--muted);margin-top:18px;max-width:30em}
+.formula{margin-top:28px;display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-family:var(--f-num);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;max-width:100%}
+.formula b{color:var(--accent);font-weight:600}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-body);font-weight:600;font-size:16px;border:0;border-radius:16px;padding:15px 22px;cursor:pointer;text-decoration:none}
+.btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow)}
+.btn-ghost{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-ghost:hover{border-color:var(--accent)}
+
+/* phone demo */
+.phone-stage{display:flex;justify-content:center;position:relative}
+.phone-stage::before{content:"";position:absolute;inset:8% 4%;background:radial-gradient(closest-side,var(--accent-soft),transparent);z-index:0}
+.phone{position:relative;z-index:1;width:100%;max-width:360px;background:var(--phone);border-radius:44px;padding:12px;box-shadow:var(--shadow)}
+.screen{background:var(--bg);border-radius:34px;overflow:hidden;padding:18px 18px 22px}
+.statusbar{display:flex;justify-content:space-between;font-family:var(--f-num);font-size:12px;color:var(--muted);padding:0 6px 10px}
+.appbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.appbar h3{font-size:18px;font-weight:800}
+.star{color:var(--amber);font-size:20px;line-height:1}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface-2);padding:4px;border-radius:12px;margin-bottom:14px}
+.tabs button{font-family:var(--f-body);font-size:13px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:8px 4px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(17,26,51,.12)}
+.field{display:grid;gap:5px;margin-bottom:10px}
+.field label{font-size:12px;font-weight:600;color:var(--muted)}
+.inbox{display:flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.inbox:focus-within{border-color:var(--accent)}
+.inbox input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font-family:var(--f-num);font-size:15px;padding:10px 0;outline:none;text-align:right}
+.inbox span{font-size:13px;color:var(--muted);margin-left:6px}
+.seg{display:flex;gap:6px;margin-bottom:10px}
+.seg button{flex:1;font-family:var(--f-body);font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:7px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.result{border-radius:18px;padding:14px 16px;margin-top:6px;background:var(--good-bg)}
+.result.loss{background:var(--bad-bg)}
+.result .k{font-size:12px;font-weight:600;color:var(--muted)}
+.result .big{font-family:var(--f-num);font-weight:600;font-size:28px;color:var(--good);line-height:1.25;margin-top:2px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.result.loss .big{color:var(--bad)}
+.result .sub{font-size:13px;color:var(--fg);margin-top:2px}
+.rows{display:grid;gap:4px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.rows div{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.rows dt{color:var(--muted)}
+.rows dd{margin:0;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:500}
+.demo-note{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* sections */
+section{padding-block:72px;border-top:1px solid var(--line)}
+.sec-head{display:grid;gap:10px;margin-bottom:36px;max-width:640px}
+.sec-head .label{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.08em}
+.sec-head h2{font-size:clamp(28px,3.6vw,40px);font-weight:800;letter-spacing:-.01em}
+.sec-head p{color:var(--muted)}
+
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.cat{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.cat h3{font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px}
+.dot{width:12px;height:12px;border-radius:4px;flex:none}
+.cat ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.cat li{display:grid;gap:2px}
+.cat li strong{font-weight:600;font-size:15px}
+.cat li span{font-size:13px;color:var(--muted);line-height:1.5}
+.core{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:2px}
+
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.feat{display:grid;gap:10px;align-content:start;min-width:0}
+.feat .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.feat .ic svg{width:24px;height:24px}
+.feat h3{font-size:19px;font-weight:800}
+.feat p{color:var(--muted);font-size:15px}
+
+.record{margin-top:40px;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow-x:auto}
+.record table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+.record th,.record td{padding:12px 18px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.record th{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.record tr:last-child td{border-bottom:0}
+.record td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums;text-align:right}
+.record th.n{text-align:right}
+.chip{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--fg)}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.caption{font-size:12px;color:var(--muted);padding:10px 18px;border-top:1px solid var(--line)}
+
+.launch{display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center;background:var(--accent);color:var(--accent-ink);border-radius:28px;padding:36px}
+.launch h2{font-size:clamp(24px,3vw,32px);font-weight:800}
+.launch p{opacity:.88;margin-top:6px}
+.launch .icon-lg{width:84px;height:84px}
+.launch .store{display:inline-flex;flex-direction:column;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:16px;padding:12px 20px;color:var(--accent-ink)}
+.launch .store small{font-size:12px;opacity:.85}
+.launch .store b{font-size:17px}
+.launch > *{min-width:0}
+
+footer{padding-block:40px 56px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+
+@media (max-width:960px){
+  .hero{grid-template-columns:1fr;gap:40px}
+  .cats{grid-template-columns:repeat(2,1fr)}
+  .feats{grid-template-columns:1fr}
+  .launch{grid-template-columns:1fr;text-align:left}
+}
+@media (max-width:560px){
+  body{padding-inline:16px}
+  .cats{grid-template-columns:1fr}
+  section{padding-block:56px}
+  .launch{padding:26px}
+  .nav-cta{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .result .big{transition:color .2s}
+  .phone{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes rise{from{transform:translateY(18px)}to{transform:none}}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="appicon" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="16" fill="#2F6BFF"/>
+      <line x1="22" y1="12" x2="22" y2="50" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="16" y="20" width="12" height="20" rx="3" fill="#FFFFFF"/>
+      <line x1="42" y1="10" x2="42" y2="44" stroke="#9FD8FF" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="36" y="16" width="12" height="18" rx="3" fill="#9FD8FF"/>
+      <line x1="8" y1="31" x2="56" y2="31" stroke="#FFD24A" stroke-width="2.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <nav>
+    <div class="brand">
+      <svg aria-hidden="true"><use href="#appicon"/></svg>
+      <div>주식매매계산기<small>Stock Calculator</small></div>
+    </div>
+    <a class="nav-cta" href="#calculators">계산기 둘러보기</a>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <span class="eyebrow">물타기 · 수익률 · 손절 계산</span>
+      <h1>복잡한 계산은<br>이제 그만, <em>평단가</em>는<br>3초면 충분합니다</h1>
+      <p class="lede">추가로 사면 평균 매입단가가 얼마가 되는지, 몇 % 올라야 본전인지, 어디서 손절해야 하는지. 주문 버튼을 누르기 전에 필요한 숫자를 앱 하나로 바로 확인하세요.</p>
+      <div class="formula" aria-label="물타기 계산 공식">
+        <b>새 평단가</b> = (보유 수량 × 평단가 + 추가 수량 × 추가 매수가) ÷ 총 수량
+      </div>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#launch">앱 받기 →</a>
+        <a class="btn btn-ghost" href="#calculators">어떤 계산을 하나요?</a>
+      </div>
+    </div>
+
+    <div class="phone-stage">
+      <div class="phone" role="group" aria-label="앱 미리보기: 직접 숫자를 바꿔 계산해 보세요">
+        <div class="screen">
+          <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+          <div class="appbar"><h3 id="demo-title">물타기 계산기</h3><span class="star" aria-hidden="true">★</span></div>
+          <div class="tabs" role="tablist" aria-label="계산기 선택">
+            <button role="tab" id="tab-avg" aria-selected="true" data-tab="avg">물타기</button>
+            <button role="tab" id="tab-target" aria-selected="false" data-tab="target">목표 매도가</button>
+            <button role="tab" id="tab-stop" aria-selected="false" data-tab="stop">손절 가격</button>
+          </div>
+
+          <!-- 물타기 -->
+          <div data-panel="avg">
+            <div class="field"><label for="a-qty">보유 수량</label><div class="inbox"><input id="a-qty" inputmode="numeric" value="100"><span>주</span></div></div>
+            <div class="field"><label for="a-avg">평균 매입단가</label><div class="inbox"><input id="a-avg" inputmode="numeric" value="72,000"><span>원</span></div></div>
+            <div class="field"><label for="a-price">추가 매수 가격</label><div class="inbox"><input id="a-price" inputmode="numeric" value="58,000"><span>원</span></div></div>
+            <div class="seg" role="group" aria-label="추가 매수 입력 방식">
+              <button id="a-mode-amt" aria-pressed="true" data-mode="amt">금액으로 입력</button>
+              <button id="a-mode-qty" aria-pressed="false" data-mode="qty">수량으로 입력</button>
+            </div>
+            <div class="field"><label for="a-add" id="a-add-label">추가 매수 금액</label><div class="inbox"><input id="a-add" inputmode="numeric" value="5,800,000"><span id="a-add-unit">원</span></div></div>
+            <div class="result" id="a-result" aria-live="polite">
+              <div class="k">새 평균 매입단가</div>
+              <div class="big" id="a-big">–</div>
+              <div class="sub" id="a-sub"></div>
+              <dl class="rows">
+                <div><dt>추가 매수 수량</dt><dd id="a-r1">–</dd></div>
+                <div><dt>총 보유 수량</dt><dd id="a-r2">–</dd></div>
+                <div><dt>총 매입금액</dt><dd id="a-r3">–</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- 목표 매도가 -->
+          <div data-panel="target" hidden>
+            <div class="field"><label for="t-price">매수가</label><div class="inbox"><input id="t-price" inputmode="numeric" value="58,000"><span>원</span></div></div>
+            <div class="field"><label for="t-qty">보유 수량</label><div class="inbox"><input id="t-qty" inputmode="numeric" value="200"><span>주</span></div></div>
+            <div class="field"><label for="t-rate">목표 수익률</label><div class="inbox"><input id="t-rate" inputmode="decimal" value="10"><span>%</span></div></div>
+            <div class="seg" role="group" aria-label="목표 수익률 빠른 선택">
+              <button data-rate="5" aria-pressed="false">5%</button><button data-rate="10" aria-pressed="true">10%</button><button data-rate="15" aria-pressed="false">15%</button><button data-rate="20" aria-pressed="false">20%</button>
+            </div>
+            <div class="result" aria-live="polite">
+              <div class="k">목표 매도가</div>
+              <div class="big" id="t-big">–</div>
+              <dl class="rows">
+                <div><dt>예상 매도금액</dt><dd id="t-r1">–</dd></div>
+                <div><dt>예상 이익</dt><dd id="t-r2">–</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- 손절 -->
+          <div data-panel="stop" hidden>
+            <div class="field"><label for="s-price">매수가</label><div class="inbox"><input id="s-price" inputmode="numeric" value="58,000"><span>원</span></div></div>
+            <div class="field"><label for="s-qty">보유 수량</label><div class="inbox"><input id="s-qty" inputmode="numeric" value="200"><span>주</span></div></div>
+            <div class="field"><label for="s-rate">허용 손실률</label><div class="inbox"><input id="s-rate" inputmode="decimal" value="7"><span>%</span></div></div>
+            <div class="result loss" aria-live="polite">
+              <div class="k">손절 기준 가격</div>
+              <div class="big" id="s-big">–</div>
+              <dl class="rows">
+                <div><dt>예상 손실금액</dt><dd id="s-r1">–</dd></div>
+                <div><dt>손절 시 회수금액</dt><dd id="s-r2">–</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <p class="demo-note" style="margin-top:-56px;margin-bottom:56px">↑ 숫자를 바꿔 보세요. 예시 값이며, 미리보기에서는 수수료·세금을 빼고 계산합니다.</p>
+
+  <section id="calculators">
+    <div class="sec-head">
+      <span class="label">CALCULATORS</span>
+      <h2>매수부터 매도, 자금 관리까지<br>필요한 계산기를 한곳에</h2>
+      <p>자주 쓰는 계산기는 홈 화면 ‘핵심 계산기’에 바로 놓여 있고, 나머지는 카테고리별로 찾을 수 있습니다. 계산기는 업데이트로 계속 늘어납니다.</p>
+    </div>
+    <div class="cats">
+      <div class="cat">
+        <h3><i class="dot" style="background:var(--accent)"></i>매수 계산</h3>
+        <ul>
+          <li><strong>물타기<span class="core">핵심</span></strong><span>추가 매수 후 새 평균 매입단가</span></li>
+          <li><strong>분할 매수</strong><span>1~3차 가격·비중별 수량과 평단가</span></li>
+          <li><strong>주식 수량</strong><span>정해진 금액으로 살 수 있는 수량</span></li>
+        </ul>
+      </div>
+      <div class="cat">
+        <h3><i class="dot" style="background:var(--good)"></i>매도 계산</h3>
+        <ul>
+          <li><strong>목표 매도가<span class="core">핵심</span></strong><span>목표 수익률에 도달하는 매도 가격</span></li>
+          <li><strong>손절 가격<span class="core">핵심</span></strong><span>손실률 또는 손실금액 기준 손절선</span></li>
+          <li><strong>분할 매도</strong><span>나눠 팔 때 차수별 매도금액</span></li>
+        </ul>
+      </div>
+      <div class="cat">
+        <h3><i class="dot" style="background:var(--violet)"></i>수익 계산</h3>
+        <ul>
+          <li><strong>매수·매도 수익<span class="core">핵심</span></strong><span>수수료·세금을 뺀 실제 손익과 수익률</span></li>
+          <li><strong>손익분기점</strong><span>거래 비용까지 메우는 최소 매도가</span></li>
+        </ul>
+      </div>
+      <div class="cat">
+        <h3><i class="dot" style="background:var(--amber)"></i>투자 관리</h3>
+        <ul>
+          <li><strong>투자금 비용</strong><span>매수에 드는 총 비용 확인</span></li>
+          <li><strong>추가 매수 후 손실률</strong><span>물타기 뒤 현재가 기준 손실률</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="sec-head">
+      <span class="label">WHY THIS APP</span>
+      <h2>계산하고, 남기고, 다시 꺼내 보기</h2>
+    </div>
+    <div class="feats">
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <h3>수수료와 세금까지 반영</h3>
+        <p>증권사마다 다른 매수·매도 수수료율과 매도 세금율을 직접 입력합니다. 화면에 보이는 손익이 실제 계좌에 찍히는 숫자와 가까워집니다.</p>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h3>계산 기록 저장</h3>
+        <p>결과 화면에서 ‘저장하기’를 누르면 종목 메모와 함께 기록 탭에 쌓입니다. 지난번 물타기 평단가를 다시 계산할 필요가 없습니다.</p>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></div>
+        <h3>자주 쓰는 계산기는 즐겨찾기</h3>
+        <p>계산기 상단의 별을 누르면 즐겨찾기 탭에 모입니다. 매일 쓰는 계산기 두세 개만 골라 두고 바로 여세요.</p>
+      </div>
+    </div>
+
+    <div class="record" role="region" aria-label="기록 화면 예시" tabindex="0">
+      <table>
+        <thead><tr><th>날짜</th><th>계산기</th><th>메모</th><th class="n">결과</th></tr></thead>
+        <tbody>
+          <tr><td class="num">10.08</td><td><span class="chip">물타기</span></td><td>반도체 2차 매수</td><td class="n">평단 65,000원</td></tr>
+          <tr><td class="num">10.06</td><td><span class="chip">목표 매도가</span></td><td>+10% 익절 라인</td><td class="n pos">63,800원</td></tr>
+          <tr><td class="num">10.06</td><td><span class="chip">손절 가격</span></td><td>-7% 손절 라인</td><td class="n neg">53,940원</td></tr>
+          <tr><td class="num">10.02</td><td><span class="chip">매수·매도 수익</span></td><td>2차전지 정리</td><td class="n pos">+412,300원</td></tr>
+        </tbody>
+      </table>
+      <div class="caption">기록 탭 화면 예시 (샘플 데이터)</div>
+    </div>
+  </section>
+
+  <section id="launch" style="border-top:0">
+    <div class="launch">
+      <svg class="icon-lg" aria-hidden="true"><use href="#appicon"/></svg>
+      <div>
+        <h2>Google Play에서 주식매매계산기를 만나보세요</h2>
+        <p>안드로이드 앱입니다. 회원가입 없이 설치 후 바로 계산할 수 있습니다.</p>
+      </div>
+      <span class="store"><small>Google Play에서 검색</small><b>주식매매계산기</b></span>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 Stock Calculator</span>
+    <span>계산 결과는 참고용이며, 투자 판단과 그 결과의 책임은 투자자 본인에게 있습니다.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const n = v => { const x = parseFloat(String(v).replace(/[^0-9.]/g,'')); return isFinite(x) ? x : 0; };
+  const won = v => Math.round(v).toLocaleString('ko-KR') + '원';
+  const ea = v => Math.floor(v).toLocaleString('ko-KR') + '주';
+  const pct = v => (v>0?'+':'') + v.toFixed(2) + '%';
+
+  // 입력 시 천 단위 콤마
+  document.querySelectorAll('input[inputmode="numeric"]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const raw = inp.value.replace(/[^0-9]/g,'');
+      inp.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
+    });
+  });
+
+  // 탭
+  const titles = {avg:'물타기 계산기', target:'목표 매도가 계산기', stop:'손절 가격 계산기'};
+  document.querySelectorAll('[data-tab]').forEach(btn => btn.addEventListener('click', () => {
+    const t = btn.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b===btn)));
+    document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t);
+    $('demo-title').textContent = titles[t];
+  }));
+
+  // 물타기
+  let mode = 'amt';
+  document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+    const qtyNow = n($('a-add').value), price = n($('a-price').value);
+    const next = b.dataset.mode;
+    if (next === mode) return;
+    // 모드 전환 시 값 변환
+    if (next === 'qty') $('a-add').value = price ? Math.floor(qtyNow/price).toLocaleString('ko-KR') : '';
+    else $('a-add').value = (qtyNow*price).toLocaleString('ko-KR');
+    mode = next;
+    document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
+    $('a-add-label').textContent = mode==='amt' ? '추가 매수 금액' : '추가 매수 수량';
+    $('a-add-unit').textContent = mode==='amt' ? '원' : '주';
+    calcAvg();
+  }));
+  function calcAvg(){
+    const q1 = n($('a-qty').value), p1 = n($('a-avg').value), p2 = n($('a-price').value), add = n($('a-add').value);
+    const q2 = mode==='amt' ? (p2 ? Math.floor(add/p2) : 0) : Math.floor(add);
+    const total = q1 + q2;
+    if (!total || !p1) { $('a-big').textContent='–'; $('a-sub').textContent='값을 입력하세요'; return; }
+    const cost = q1*p1 + q2*p2, avg = cost/total;
+    $('a-big').textContent = won(avg);
+    const diff = (avg - p1)/p1*100;
+    $('a-sub').textContent = `기존 평단 대비 ${pct(diff)} · 평단까지 ${p2 ? pct((avg-p2)/p2*100) : '–'} 상승 필요`;
+    $('a-r1').textContent = ea(q2);
+    $('a-r2').textContent = ea(total);
+    $('a-r3').textContent = won(cost);
+  }
+  ['a-qty','a-avg','a-price','a-add'].forEach(id => $(id).addEventListener('input', calcAvg));
+
+  // 목표 매도가
+  function calcTarget(){
+    const p = n($('t-price').value), q = n($('t-qty').value), r = n($('t-rate').value)/100;
+    const tp = p*(1+r);
+    $('t-big').textContent = p ? won(tp) : '–';
+    $('t-r1').textContent = won(tp*q);
+    $('t-r2').textContent = '+' + won((tp-p)*q);
+    document.querySelectorAll('[data-rate]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.rate) === r*100)));
+  }
+  document.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click', () => { $('t-rate').value = b.dataset.rate; calcTarget(); }));
+  ['t-price','t-qty','t-rate'].forEach(id => $(id).addEventListener('input', calcTarget));
+
+  // 손절
+  function calcStop(){
+    const p = n($('s-price').value), q = n($('s-qty').value), r = n($('s-rate').value)/100;
+    const sp = p*(1-r);
+    $('s-big').textContent = p ? won(sp) : '–';
+    $('s-r1').textContent = '-' + won(p*q*r);
+    $('s-r2').textContent = won(sp*q);
+  }
+  ['s-price','s-qty','s-rate'].forEach(id => $(id).addEventListener('input', calcStop));
+
+  calcAvg(); calcTarget(); calcStop();
+})();
+</script>
